@@ -1,0 +1,44 @@
+[project]
+name = "fidzulu-ml"
+version = "0.1.0"
+description = "FidZulu training and forecasting pipeline with SQL, ML, and FastAPI integration"
+authors = [{ name = "Heinrich" }]
+requires-python = ">=3.12"
+
+dependencies = [
+    # Core scientific stack
+    "numpy>=2.3",
+    "pandas>=2.3",
+    "scikit-learn>=1.8",
+    "scipy>=1.16",
+
+    # ML / Deep learning
+    "tensorflow>=2.20",
+    "keras>=3.12",
+
+    # Database connectivity
+    "SQLAlchemy>=2.0",
+    "oracledb>=3.4",
+
+    # Visualization
+    "plotly>=6.5",
+    "nbformat>=5.0",
+
+    # Utilities
+    "python-dotenv>=1.2",
+    "requests>=2.32",
+    "rich>=14.2"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0",
+    "ipython>=9.8",
+    "jupyter>=1.0"
+]
+
+[tool.pytest.ini_options]
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s %(levelname)s %(name)s: %(message)s"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"

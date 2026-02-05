@@ -1,0 +1,116 @@
+FidZuluPythonML
+
+Enterprise-grade Python training project focused on database connectivity, modular architecture, and reproducible machine learning workflows. Built to support curriculum development, testing hygiene, and real-world deployment scenarios.
+
+📁 Project Structure
+
+FidZuluPythonML/
+├── .github/workflows/ci.yml       # GitHub Actions for CI
+├── .venv/                         # Virtual environment (excluded via .gitignore)
+├── .vscode/                       # VS Code settings
+├── build/                         # Build artifacts
+├── docs/                          # Documentation
+├── notebooks/                     # Jupyter notebooks
+├── src/
+│   └── fidzulu/
+│       ├── features/              # Feature engineering modules
+│       ├── models/                # ML model definitions
+│       ├── repositories/          # DB access and query logic
+│       ├── utils/                 # Shared utilities
+│       ├── __init__.py
+│       ├── config.py              # Environment config loader
+│       └── db.py                  # SQLAlchemy engine builder
+├── tests/
+│   ├── test_db_connection.py      # Oracle XE connectivity test
+│   ├── test_features.py           # Feature module tests
+│   └── test_repositories.py       # Repository logic tests
+├── .env                           # Environment variables (excluded via .gitignore)
+├── debug_env.py                   # Manual test runner for engine/debugging
+├── pyproject.toml                 # Project metadata and dependencies
+└── .gitignore                     # Git exclusions
+
+🧪 Running Tests
+
+Tests are written using pytest and use shared fixtures for database connectivity.
+
+Run all tests:
+
+pytest tests/
+
+Run a specific test file:
+
+pytest tests/test_features.py
+
+Run a single test function:
+
+pytest tests/test_features.py::test_feature_table_exists
+
+Show debug output:
+
+pytest tests/ -s
+
+⚙️ Environment Setup
+
+1. Create virtual environment
+
+python -m venv .venv
+source .venv/bin/activate  # or .venv\Scripts\activate on Windows
+
+2. Install dependencies
+
+pip install -r requirements.txt
+
+Or if using Poetry:
+
+poetry install
+
+3. Create .env file in project root:
+
+FIDZULU_DB_HOST=localhost
+FIDZULU_DB_PORT=1521
+FIDZULU_DB_SERVICE=xepdb1
+FIDZULU_DB_USER=FIDZULUNEW
+FIDZULU_DB_PASSWORD=FidZulu
+
+🧠 Curriculum Highlights
+
+Modular Python architecture with src/ layout
+
+Oracle XE connectivity via SQLAlchemy
+
+Environment-driven configuration
+
+Reproducible test suite with shared fixtures
+
+GitHub Actions-ready CI pipeline
+
+Designed for training future software development leaders
+
+🚀 Getting Started
+
+Clone the repo:
+
+git clone <your-local-path-or-remote-url>
+cd FidZuluPythonML
+
+Initialize Git (if local only):
+
+git init
+git add .
+git commit -m "Initial commit"
+
+Activate .venv, configure .env, and run:
+
+pytest tests/
+
+📦 Deployment Notes
+
+Oracle XE must be running locally or accessible via network.
+
+Ensure user FIDZULUNEW exists in XEPDB1 pluggable database.
+
+Future modules will include FastAPI endpoints and Tornado-based async services.
+
+👨‍🏫 Maintainer Notes
+
+This project is part of the FidZulu curriculum initiative. It scaffolds reproducible, enterprise-grade training systems for future software development leaders. All modules are designed to be plug-and-play, testable, a
