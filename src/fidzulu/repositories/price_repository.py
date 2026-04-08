@@ -1,8 +1,12 @@
 # src/fidzulu/repositories/price_repository.py
+
 from typing import Optional
-#import pandas as pd
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
+from fidzulu.utils.logging import get_logger, log_query_attempt, log_query_failure, log_empty_result
+from fidzulu.exceptions import RepositoryError
+
+logger = get_logger(__name__)
 
 class PriceRepository:
     def __init__(self, engine):
@@ -16,8 +20,18 @@ class PriceRepository:
             WHERE p.cat_id = :cat_id
             ORDER BY p.prod_id, pr.pri_startdate
         """)
-        with self.engine.connect() as conn:
-            results = conn.execute(query, {"cat_id": cat_id}).fetchall()
+        operation = "get_prices_by_category"
+        params = {"cat_id": cat_id}
+        log_query_attempt(logger, operation, "prices_by_category", params)
+        try:
+            with self.engine.connect() as conn:
+                results = conn.execute(query, params).fetchall()
+        except Exception as exc:
+            log_query_failure(logger, operation, "prices_by_category", exc, params)
+            raise RepositoryError("Failed to fetch prices. Check database connectivity and credentials.")
+
+        if not results:
+            log_empty_result(logger, operation, "prices_by_category", params)
 
         dataset = {"CategoryID": cat_id}
 

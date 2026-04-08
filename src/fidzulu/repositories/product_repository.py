@@ -1,6 +1,10 @@
 # src/fidzulu/repositories/product_repository.py
 from sqlalchemy.engine import Engine
 from sqlalchemy import text
+from fidzulu.utils.logging import get_logger, log_query_attempt, log_query_failure, log_empty_result
+from fidzulu.exceptions import RepositoryError
+
+logger = get_logger(__name__)
 
 class ProductRepository:
     def __init__(self, engine: Engine):
@@ -13,8 +17,18 @@ class ProductRepository:
         WHERE cat_id = :cat_id
         ORDER BY prod_id
         """
-        with self.engine.connect() as conn:
-            results = conn.execute(text(sql), {"cat_id": cat_id}).fetchall()
+        operation = "get_products_by_category"
+        params = {"cat_id": cat_id}
+        log_query_attempt(logger, operation, "products_by_category", params)
+        try:
+            with self.engine.connect() as conn:
+                results = conn.execute(text(sql), params).fetchall()
+        except Exception as exc:
+            log_query_failure(logger, operation, "products_by_category", exc, params)
+            raise RepositoryError("Failed to fetch products. Check database connectivity and credentials.")
+
+        if not results:
+            log_empty_result(logger, operation, "products_by_category", params)
 
         dataset = {"CategoryID": cat_id}
 

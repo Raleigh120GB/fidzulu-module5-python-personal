@@ -1,13 +1,18 @@
 # tests/conftest.py
+import sys
+from pathlib import Path
+
+# Ensure project `src` directory is on sys.path so tests importing
+# using the legacy `src.*` namespace resolve correctly.
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+
+from dotenv import load_dotenv
+load_dotenv(ROOT / ".env")
+
 import pytest
 from sqlalchemy import text
 from fidzulu.db import oracle_engine
-from pathlib import Path
-from dotenv import load_dotenv
-
-# Force loading .env from project root
-ROOT = Path(__file__).resolve().parent.parent
-load_dotenv(ROOT / ".env")
 
 
 @pytest.fixture(scope="session")

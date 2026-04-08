@@ -1,7 +1,7 @@
 # src/fidzulu/config.py
 import os
 from dataclasses import dataclass
-from src.fidzulu.utils.logging import get_logger
+from fidzulu.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
