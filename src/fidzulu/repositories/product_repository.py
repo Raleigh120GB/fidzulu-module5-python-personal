@@ -1,7 +1,7 @@
 # src/fidzulu/repositories/product_repository.py
 from sqlalchemy.engine import Engine
 from sqlalchemy import text
-from fidzulu.utils.logging import get_logger, log_query_attempt, log_query_failure, log_empty_result
+from fidzulu.utils.logging import get_logger, log_query_attempt, log_query_failure, log_empty_result, log_anomaly
 from fidzulu.exceptions import RepositoryError
 
 logger = get_logger(__name__)
@@ -31,9 +31,18 @@ class ProductRepository:
             log_empty_result(logger, operation, "products_by_category", params)
 
         dataset = {"CategoryID": cat_id}
+        skipped = 0
 
         for row in results:
             prod_id, prod_name, cat_id_val, brand_id, created_at = row
+
+            # Basic sanity checks
+            if prod_name is None or str(prod_name).strip() == "":
+                skipped += 1
+                continue
+            if created_at is None:
+                skipped += 1
+                continue
 
             if prod_id not in dataset:
                 dataset[prod_id] = {
@@ -45,5 +54,17 @@ class ProductRepository:
             dataset[prod_id]["names"].append(prod_name)
             dataset[prod_id]["brand_ids"].append(brand_id)
             dataset[prod_id]["created_at"].append(created_at)
+
+        # Remove empty pids
+        empty_pids = [p for p in list(dataset.keys()) if p != "CategoryID" and not dataset[p]["names"]]
+        for p in empty_pids:
+            del dataset[p]
+
+        if skipped > 0:
+            log_anomaly(logger, "filtered_invalid_product_rows", {"category": cat_id, "skipped_rows": skipped})
+
+        if len(dataset) == 1:
+            log_anomaly(logger, "no_valid_product_data", {"category": cat_id})
+            raise RepositoryError("No valid product data returned for category")
 
         return dataset

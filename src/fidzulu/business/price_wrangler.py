@@ -5,8 +5,14 @@ from typing import Dict, Tuple
 # --- Existing Wrangling Class ---
 class PriceDataWrangler:
     def __init__(self, raw_data: Dict):
+        if raw_data is None:
+            raise ValueError("raw_data must be a non-empty dict")
+        if not isinstance(raw_data, dict):
+            raise TypeError("raw_data must be a dict mapping product ids to data")
         self.raw_data = raw_data
         self.category_id = raw_data.get("CategoryID")
+        if self.category_id is None:
+            raise ValueError("raw_data missing required key 'CategoryID'")
         self.df = self._to_dataframe()
 
     def _to_dataframe(self) -> pd.DataFrame:
@@ -14,12 +20,45 @@ class PriceDataWrangler:
         for prod_id, data in self.raw_data.items():
             if prod_id == "CategoryID":
                 continue
-            for price, start, end in zip(data["prices"], data["start_dates"], data["end_dates"]):
+            if not isinstance(data, dict):
+                continue
+            prices = data.get("prices")
+            starts = data.get("start_dates")
+            ends = data.get("end_dates")
+            if prices is None or starts is None or ends is None:
+                # skip malformed product entries
+                continue
+            # coerce to lists
+            try:
+                prices_list = list(prices)
+                starts_list = list(starts)
+                ends_list = list(ends)
+            except Exception:
+                continue
+
+            # lengths must match; if not, use shortest
+            length = min(len(prices_list), len(starts_list), len(ends_list))
+            if length == 0:
+                continue
+
+            for i in range(length):
+                price = prices_list[i]
+                start = starts_list[i]
+                end = ends_list[i]
+                # coerce price to float when possible
+                try:
+                    base_price = float(price)
+                except Exception:
+                    # skip non-numeric prices
+                    continue
+                # parse dates; invalid dates become NaT
+                start_ts = pd.to_datetime(start, errors="coerce")
+                end_ts = pd.to_datetime(end, errors="coerce")
                 records.append({
                     "prod_id": prod_id,
-                    "base_price": float(price),
-                    "start_date": pd.to_datetime(start),
-                    "end_date": pd.to_datetime(end)
+                    "base_price": base_price,
+                    "start_date": start_ts,
+                    "end_date": end_ts
                 })
         return pd.DataFrame(records)
 

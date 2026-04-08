@@ -28,8 +28,29 @@ class SynodicalRegressor:
         return np.column_stack([t, sin_year, cos_year, sin_q, cos_q, np.ones_like(t)])
 
     def fit(self, X, y):
-        X_feat = self._build_features(X)
-        y_arr = np.asarray(y, dtype=float)
+        # Defensive checks: X and y must be array-like and same length
+        try:
+            x_arr = np.asarray(X, dtype=float)
+            y_arr = np.asarray(y, dtype=float)
+        except Exception:
+            raise TypeError("X and y must be numeric array-like inputs")
+
+        if x_arr.ndim != 1:
+            x_arr = x_arr.ravel()
+
+        if len(x_arr) == 0 or len(y_arr) == 0 or len(x_arr) != len(y_arr):
+            # insufficient data: initialize to safe defaults
+            self.coef_t = 0.0
+            self.coef_sin_year = 0.0
+            self.coef_cos_year = 0.0
+            self.coef_sin_q = 0.0
+            self.coef_cos_q = 0.0
+            self.intercept_ = float(np.mean(y_arr) if len(y_arr) > 0 else 0.0)
+            self.coef_ = [self.coef_t, self.coef_sin_year, self.coef_cos_year,
+                          self.coef_sin_q, self.coef_cos_q]
+            return
+
+        X_feat = self._build_features(x_arr)
         try:
             beta, _, _, _ = np.linalg.lstsq(X_feat, y_arr, rcond=None)
         except Exception:
