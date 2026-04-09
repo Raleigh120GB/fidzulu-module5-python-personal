@@ -72,3 +72,41 @@ class SynodicalRegressor:
         beta = np.array([self.coef_t, self.coef_sin_year, self.coef_cos_year,
                          self.coef_sin_q, self.coef_cos_q, self.intercept_])
         return X_feat @ beta
+
+
+def double_sin_trend_model(t,
+                           intercept, slope,
+                           A1, freq1, phase1,
+                           A2, freq2, phase2):
+    """Double-sinusoid plus linear trend model.
+
+    Parameters
+    - t: array-like time values (numeric, e.g. days since first observation)
+    - intercept, slope: linear trend parameters
+    - A1, freq1, phase1: amplitude, frequency (cycles per unit t), phase (radians) for first sinusoid
+    - A2, freq2, phase2: amplitude, frequency (cycles per unit t), phase (radians) for second sinusoid
+
+    Returns
+    - numpy array of model values, same shape as input t
+
+    Suitable for use with scipy.optimize.curve_fit. Frequencies are interpreted
+    as cycles per unit of `t` (e.g., cycles per day).
+    """
+    t = np.asarray(t, dtype=float)
+    term_lin = intercept + slope * t
+    term1 = A1 * np.sin(2.0 * np.pi * freq1 * t + phase1)
+    term2 = A2 * np.sin(2.0 * np.pi * freq2 * t + phase2)
+    return term_lin + term1 + term2
+
+
+def single_sin_trend_model(t, intercept, slope, A1, freq1, phase1):
+    """Single-sinusoid plus linear trend model.
+
+    Compatible with `curve_fit` when the second component is unnecessary or
+    unstable. Parameters analogous to `double_sin_trend_model` but without the
+    second sinusoid.
+    """
+    t = np.asarray(t, dtype=float)
+    term_lin = intercept + slope * t
+    term1 = A1 * np.sin(2.0 * np.pi * freq1 * t + phase1)
+    return term_lin + term1

@@ -13,6 +13,14 @@ class TrainTestSplitter:
         if df is None or not isinstance(df, pd.DataFrame):
             raise TypeError("df must be a pandas DataFrame")
         self.df = df.copy()
+        # Map common alternative column names to the expected `base_price`
+        if "base_price" not in self.df.columns:
+            alt_price_cols = ["price", "avg_price", "value", "unit_price"]
+            for alt in alt_price_cols:
+                if alt in self.df.columns:
+                    self.df["base_price"] = self.df[alt]
+                    print(f"[TrainTestSplitter] mapped alternative price column '{alt}' to 'base_price'")
+                    break
         # Ensure `base_price` is numeric (convert from text if needed)
         if "base_price" in self.df.columns:
             before_nonnull = self.df["base_price"].notnull().sum()
@@ -21,6 +29,14 @@ class TrainTestSplitter:
             after_nonnull = self.df["base_price"].notnull().sum()
             if before_nonnull != after_nonnull:
                 print(f"[TrainTestSplitter] coerced base_price to numeric: non-null before={before_nonnull}, after={after_nonnull}")
+        # Map common alternative column names to the expected `start_date`
+        if "start_date" not in self.df.columns:
+            alt_date_cols = ["date", "obs_date", "timestamp"]
+            for alt in alt_date_cols:
+                if alt in self.df.columns:
+                    self.df["start_date"] = self.df[alt]
+                    print(f"[TrainTestSplitter] mapped alternative date column '{alt}' to 'start_date'")
+                    break
         # Ensure `start_date` is a datetime for reliable sorting
         if "start_date" in self.df.columns:
             self.df["start_date"] = pd.to_datetime(self.df["start_date"], errors="coerce")
@@ -42,6 +58,15 @@ class TrainTestSplitter:
                 test_sets[prod_id] = pd.DataFrame()
                 continue
             grp = group.sort_values("start_date").reset_index(drop=True)
+                # create numeric time column 't' as days since the first date for this product
+            try:
+                base = grp["start_date"].min()
+                if pd.notna(base):
+                    grp["t"] = (grp["start_date"] - base).dt.days.astype("Int64")
+                else:
+                    grp["t"] = pd.NA
+            except Exception:
+                grp["t"] = pd.NA
             n = len(grp)
             if n == 0:
                 train_sets[prod_id] = grp.copy()
@@ -99,6 +124,15 @@ class TrainTestSplitter:
                 continue
 
             grp = group.sort_values("start_date").reset_index(drop=True)
+                # create numeric time column 't' as days since the first date for this product
+            try:
+                base = grp["start_date"].min()
+                if pd.notna(base):
+                    grp["t"] = (grp["start_date"] - base).dt.days.astype("Int64")
+                else:
+                    grp["t"] = pd.NA
+            except Exception:
+                grp["t"] = pd.NA
             n = len(grp)
             if n == 0:
                 train_sets[prod_id] = grp.copy()
